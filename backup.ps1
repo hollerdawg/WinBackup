@@ -15,7 +15,7 @@ Param(
     [int]$ThreadsPerSource = 2,
 
     [Parameter(Mandatory=$false)]
-    [switch]$NoCopy,
+    [switch]$Fake,
 
     [Parameter(Mandatory=$true, ValueFromRemainingArguments=$true)]
     [string[]]$SourceDirectory
@@ -44,13 +44,12 @@ function mirror_dirs {
         [Parameter(Mandatory=$true, Position=2)]
         [string]$ProcLog
     )
-    $null = New-Item -ItemType "directory" -Path "$Destination" -Force
-    $command = "Robocopy.exe `"$Source`" `"$Destination`" /MIR /NP `"/LOG:$ProcLog`" /R:0 /DST /TBD /MON:$NumFilesModified /MOT:$ChkInterval /MT:$ThreadsPerSource"
+    $command = "Robocopy.exe `"$Source`" `"$Destination`" /MIR /NP `"/LOG:$ProcLog`" /R:0 /XJ /DST /TBD /MON:$NumFilesModified /MOT:$ChkInterval /MT:$ThreadsPerSource /XF `"desktop.ini`""
     Add-Content "$Log" "$command"
-    Add-Content "$ProcLog" "$command"
     Write-Host "$command"
-    $sb = [scriptblock]::create("$command")
-    if (! $NoCopy) {
+    if (! $Fake) {
+        $null = New-Item -ItemType "directory" -Path "$Destination" -Force
+        $sb = [scriptblock]::create("$command")
         Start-Job -Name "$Source" -ScriptBlock $sb
     }
 }
